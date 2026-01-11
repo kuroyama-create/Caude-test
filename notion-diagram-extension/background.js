@@ -1,5 +1,5 @@
 // Notion Diagram Generator - Background Service Worker
-// Handles Gemini API & Imagen 3 (Nano Banana Pro) for diagram generation
+// Handles Gemini 2.0 Flash (Nano Banana Pro) for AI-powered diagram image generation
 
 // Message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -11,7 +11,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Generate diagram using Imagen 3 (Nano Banana Pro)
+// Generate diagram using Gemini 2.0 Flash (Nano Banana Pro)
 async function generateDiagram(text, style, apiKey) {
   try {
     // Create a detailed prompt for diagram generation
@@ -52,32 +52,33 @@ ${truncatedText}
 Style: Professional business diagram, clean design, high contrast, readable text`;
 }
 
-// Generate image using Imagen 3 (Nano Banana Pro) API
+// Generate image using Gemini 2.0 Flash (Nano Banana Pro) with native image generation
 async function generateImageWithImagen3(prompt, apiKey) {
-  // Try Imagen 3 first
-  const imagenModels = [
-    'imagen-3.0-generate-002',
-    'imagen-3.0-generate-001'
+  // Gemini 2.0 Flash with image generation capability (Nano Banana Pro)
+  const geminiImageModels = [
+    'gemini-2.0-flash-exp',
+    'gemini-2.0-flash-preview-image-generation',
+    'gemini-2.0-flash'
   ];
 
-  for (const model of imagenModels) {
+  for (const model of geminiImageModels) {
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            instances: [{
-              prompt: prompt
+            contents: [{
+              parts: [{
+                text: prompt
+              }]
             }],
-            parameters: {
-              sampleCount: 1,
-              aspectRatio: '4:3',
-              safetyFilterLevel: 'block_few',
-              personGeneration: 'dont_allow'
+            generationConfig: {
+              responseModalities: ['image', 'text'],
+              responseMimeType: 'image/png'
             }
           })
         }
@@ -85,16 +86,25 @@ async function generateImageWithImagen3(prompt, apiKey) {
 
       if (response.ok) {
         const data = await response.json();
-        if (data.predictions && data.predictions[0]?.bytesBase64Encoded) {
-          return `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
+
+        // Check for inline image data in response
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        for (const part of parts) {
+          if (part.inlineData?.data) {
+            const mimeType = part.inlineData.mimeType || 'image/png';
+            return `data:${mimeType};base64,${part.inlineData.data}`;
+          }
         }
       }
+
+      console.log(`Model ${model} did not return image, trying next...`);
     } catch (e) {
-      console.log(`Model ${model} failed, trying next...`);
+      console.log(`Model ${model} failed: ${e.message}, trying next...`);
     }
   }
 
-  // Fallback: Use Gemini 2.0 Flash with image generation
+  // Fallback: Generate SVG diagram using text analysis
+  console.log('Image generation not available, falling back to SVG diagram');
   return await generateWithGeminiFlash(prompt, apiKey);
 }
 
