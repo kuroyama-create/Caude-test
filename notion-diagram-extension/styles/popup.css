@@ -1,0 +1,280 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  width: 380px;
+  min-height: 400px;
+  background: #f7f6f3;
+  color: #37352f;
+}
+
+.container {
+  padding: 16px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0ddd8;
+}
+
+header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #37352f;
+}
+
+.section {
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.section h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b6b6b;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.input-group label {
+  display: none;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e0ddd8;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+  border-color: #2eaadc;
+}
+
+.status {
+  font-size: 12px;
+  margin-top: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.status.success {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status.error {
+  background: #ffebee;
+  color: #c62828;
+}
+
+#selected-text-container {
+  min-height: 60px;
+  max-height: 120px;
+  overflow-y: auto;
+  background: #f7f6f3;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+#no-text-message {
+  color: #9b9b9b;
+  font-size: 13px;
+  text-align: center;
+  padding: 20px 0;
+}
+
+#selected-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #37352f;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.style-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.style-option {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: #f7f6f3;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.style-option:hover {
+  background: #ebebea;
+}
+
+.style-option input {
+  margin-right: 8px;
+  accent-color: #2eaadc;
+}
+
+.style-label {
+  font-size: 13px;
+  color: #37352f;
+}
+
+.style-option input:checked + .style-label {
+  font-weight: 600;
+  color: #2eaadc;
+}
+
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #2eaadc;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2596c4;
+}
+
+.btn-secondary {
+  background: #e0ddd8;
+  color: #37352f;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #d3d0cb;
+}
+
+.btn-generate {
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+}
+
+.btn-generate:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+#preview-container {
+  background: #f7f6f3;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+#preview-image {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-buttons .btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+#loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e0ddd8;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#loading p {
+  margin-top: 12px;
+  color: #6b6b6b;
+  font-size: 14px;
+}
+
+#error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+footer {
+  text-align: center;
+  padding-top: 12px;
+  border-top: 1px solid #e0ddd8;
+}
+
+footer p {
+  font-size: 11px;
+  color: #9b9b9b;
+}
+
+.hidden {
+  display: none !important;
+}

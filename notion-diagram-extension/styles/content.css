@@ -1,0 +1,179 @@
+/* Notion Diagram Generator - Content Script Styles */
+
+#notion-diagram-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.notion-diagram-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.notion-diagram-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f7f6f3;
+}
+
+.notion-diagram-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #37352f;
+}
+
+.notion-diagram-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #9b9b9b;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.notion-diagram-close:hover {
+  color: #37352f;
+}
+
+.notion-diagram-content {
+  padding: 20px;
+  text-align: center;
+}
+
+.notion-diagram-content img {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  cursor: grab;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.notion-diagram-content img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.notion-diagram-content img:active {
+  cursor: grabbing;
+}
+
+.notion-diagram-instructions {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #6b6b6b;
+  line-height: 1.6;
+}
+
+.notion-diagram-actions {
+  display: flex;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.notion-diagram-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notion-diagram-btn.copy-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.notion-diagram-btn.copy-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.notion-diagram-btn.download-btn {
+  background: #e0ddd8;
+  color: #37352f;
+}
+
+.notion-diagram-btn.download-btn:hover {
+  background: #d3d0cb;
+}
+
+/* Notification styles */
+#notion-diagram-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  z-index: 9999999;
+  transition: transform 0.3s ease;
+}
+
+#notion-diagram-notification.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+#notion-diagram-notification.success {
+  background: #4caf50;
+  color: white;
+}
+
+#notion-diagram-notification.error {
+  background: #f44336;
+  color: white;
+}
+
+#notion-diagram-notification.info {
+  background: #2196f3;
+  color: white;
+}

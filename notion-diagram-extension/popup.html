@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notion Diagram Generator</title>
+  <link rel="stylesheet" href="styles/popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📊 図解ジェネレーター</h1>
+    </header>
+
+    <main>
+      <!-- API設定セクション -->
+      <section id="api-settings" class="section">
+        <h2>API設定</h2>
+        <div class="input-group">
+          <label for="api-key">Gemini API Key</label>
+          <input type="password" id="api-key" placeholder="APIキーを入力...">
+          <button id="save-api-key" class="btn btn-secondary">保存</button>
+        </div>
+        <p id="api-status" class="status"></p>
+      </section>
+
+      <!-- テキスト選択セクション -->
+      <section id="text-section" class="section">
+        <h2>選択テキスト</h2>
+        <div id="selected-text-container">
+          <p id="no-text-message">Notion上でテキストを選択してください</p>
+          <div id="selected-text" class="hidden"></div>
+        </div>
+        <button id="get-selection" class="btn btn-primary">選択テキストを取得</button>
+      </section>
+
+      <!-- 図解スタイル選択 -->
+      <section id="style-section" class="section">
+        <h2>図解スタイル</h2>
+        <div class="style-options">
+          <label class="style-option">
+            <input type="radio" name="diagram-style" value="flowchart" checked>
+            <span class="style-label">フローチャート</span>
+          </label>
+          <label class="style-option">
+            <input type="radio" name="diagram-style" value="mindmap">
+            <span class="style-label">マインドマップ</span>
+          </label>
+          <label class="style-option">
+            <input type="radio" name="diagram-style" value="infographic">
+            <span class="style-label">インフォグラフィック</span>
+          </label>
+          <label class="style-option">
+            <input type="radio" name="diagram-style" value="timeline">
+            <span class="style-label">タイムライン</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- 生成ボタン -->
+      <section id="generate-section" class="section">
+        <button id="generate-btn" class="btn btn-generate" disabled>
+          🎨 図解を生成
+        </button>
+      </section>
+
+      <!-- プレビューセクション -->
+      <section id="preview-section" class="section hidden">
+        <h2>プレビュー</h2>
+        <div id="preview-container">
+          <img id="preview-image" alt="生成された図解">
+        </div>
+        <div class="action-buttons">
+          <button id="insert-btn" class="btn btn-primary">Notionに挿入</button>
+          <button id="download-btn" class="btn btn-secondary">ダウンロード</button>
+          <button id="regenerate-btn" class="btn btn-secondary">再生成</button>
+        </div>
+      </section>
+
+      <!-- ローディング -->
+      <div id="loading" class="hidden">
+        <div class="spinner"></div>
+        <p>図解を生成中...</p>
+      </div>
+
+      <!-- エラー表示 -->
+      <div id="error-message" class="hidden"></div>
+    </main>
+
+    <footer>
+      <p>Powered by Gemini API</p>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
