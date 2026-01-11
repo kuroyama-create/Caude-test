@@ -1,5 +1,5 @@
 // Notion Diagram Generator - Background Service Worker
-// Handles Gemini API communication for diagram generation
+// Handles Gemini API & Imagen 3 (Nano Banana Pro) for diagram generation
 
 // Message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -11,17 +11,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Generate diagram using Gemini API
+// Generate diagram using Imagen 3 (Nano Banana Pro)
 async function generateDiagram(text, style, apiKey) {
   try {
-    // Step 1: Use Gemini to analyze text and create diagram structure
-    const diagramStructure = await analyzTextWithGemini(text, style, apiKey);
+    // Create a detailed prompt for diagram generation
+    const imagePrompt = createImagePrompt(text, style);
 
-    // Step 2: Generate SVG diagram from structure
-    const svgContent = generateSVGDiagram(diagramStructure, style);
-
-    // Step 3: Convert SVG to PNG data URL
-    const imageData = await svgToPng(svgContent);
+    // Generate image using Imagen 3
+    const imageData = await generateImageWithImagen3(imagePrompt, apiKey);
 
     return { success: true, imageData };
   } catch (error) {
@@ -30,8 +27,96 @@ async function generateDiagram(text, style, apiKey) {
   }
 }
 
-// Analyze text with Gemini API
-async function analyzTextWithGemini(text, style, apiKey) {
+// Create detailed prompt for image generation
+function createImagePrompt(text, style) {
+  const styleDescriptions = {
+    flowchart: 'a clean professional flowchart diagram with boxes connected by arrows, showing the process flow',
+    mindmap: 'a colorful mind map diagram with a central topic and branching subtopics radiating outward',
+    infographic: 'a modern infographic with icons, numbers, and visual elements highlighting key points',
+    timeline: 'a horizontal timeline diagram with events marked along a line with dates and descriptions'
+  };
+
+  const styleDesc = styleDescriptions[style] || styleDescriptions.flowchart;
+
+  // Truncate text if too long
+  const truncatedText = text.length > 500 ? text.substring(0, 500) + '...' : text;
+
+  return `Create ${styleDesc} that visualizes the following content.
+Make it professional, clean, and easy to understand.
+Use a white background with colorful accents.
+The diagram should be in Japanese if the content is in Japanese.
+
+Content to visualize:
+${truncatedText}
+
+Style: Professional business diagram, clean design, high contrast, readable text`;
+}
+
+// Generate image using Imagen 3 (Nano Banana Pro) API
+async function generateImageWithImagen3(prompt, apiKey) {
+  // Try Imagen 3 first
+  const imagenModels = [
+    'imagen-3.0-generate-002',
+    'imagen-3.0-generate-001'
+  ];
+
+  for (const model of imagenModels) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            instances: [{
+              prompt: prompt
+            }],
+            parameters: {
+              sampleCount: 1,
+              aspectRatio: '4:3',
+              safetyFilterLevel: 'block_few',
+              personGeneration: 'dont_allow'
+            }
+          })
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.predictions && data.predictions[0]?.bytesBase64Encoded) {
+          return `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
+        }
+      }
+    } catch (e) {
+      console.log(`Model ${model} failed, trying next...`);
+    }
+  }
+
+  // Fallback: Use Gemini 2.0 Flash with image generation
+  return await generateWithGeminiFlash(prompt, apiKey);
+}
+
+// Fallback: Generate with Gemini 2.0 Flash (creates SVG diagram)
+async function generateWithGeminiFlash(prompt, apiKey) {
+  // First analyze text with Gemini
+  const style = prompt.includes('flowchart') ? 'flowchart' :
+                prompt.includes('mind map') ? 'mindmap' :
+                prompt.includes('infographic') ? 'infographic' :
+                prompt.includes('timeline') ? 'timeline' : 'flowchart';
+
+  // Extract the original text from prompt
+  const textMatch = prompt.match(/Content to visualize:\n([\s\S]*?)\n\nStyle:/);
+  const text = textMatch ? textMatch[1].trim() : prompt;
+
+  const diagramStructure = await analyzeTextWithGemini(text, style, apiKey);
+  const svgContent = generateSVGDiagram(diagramStructure, style);
+  return await svgToPng(svgContent);
+}
+
+// Analyze text with Gemini API (fallback for diagram structure)
+async function analyzeTextWithGemini(text, style, apiKey) {
   const stylePrompts = {
     flowchart: 'フローチャート形式で、処理の流れをステップごとに示す',
     mindmap: 'マインドマップ形式で、中心トピックから放射状に関連項目を配置する',
@@ -71,53 +156,78 @@ ${text}
 - 色は視認性の良い色を選んでください
 - 必ず有効なJSONのみを出力してください`;
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 2048
+  // Try multiple Gemini models
+  const geminiModels = [
+    'gemini-2.0-flash',
+    'gemini-1.5-flash-latest',
+    'gemini-1.5-flash'
+  ];
+
+  let lastError = null;
+
+  for (const model of geminiModels) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: prompt
+              }]
+            }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 2048
+            }
+          })
         }
-      })
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        lastError = new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+        console.log(`Model ${model} failed: ${lastError.message}, trying next...`);
+        continue;
+      }
+
+      const data = await response.json();
+      const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!textContent) {
+        lastError = new Error('Gemini APIからの応答が空です');
+        continue;
+      }
+
+      // Parse JSON from response
+      try {
+        // Extract JSON from response (handle markdown code blocks)
+        let jsonStr = textContent;
+        const jsonMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch) {
+          jsonStr = jsonMatch[1];
+        }
+        return JSON.parse(jsonStr.trim());
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError, 'Response:', textContent);
+        // Return a fallback structure
+        return createFallbackStructure(text, style);
+      }
+    } catch (e) {
+      lastError = e;
+      console.log(`Model ${model} failed with exception, trying next...`);
     }
-  );
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
   }
 
-  const data = await response.json();
-  const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!textContent) {
-    throw new Error('Gemini APIからの応答が空です');
+  // All models failed, throw last error or return fallback
+  if (lastError) {
+    console.error('All Gemini models failed:', lastError);
   }
-
-  // Parse JSON from response
-  try {
-    // Extract JSON from response (handle markdown code blocks)
-    let jsonStr = textContent;
-    const jsonMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonMatch) {
-      jsonStr = jsonMatch[1];
-    }
-    return JSON.parse(jsonStr.trim());
-  } catch (parseError) {
-    console.error('JSON parse error:', parseError, 'Response:', textContent);
-    // Return a fallback structure
-    return createFallbackStructure(text, style);
-  }
+  return createFallbackStructure(text, style);
 }
 
 // Create fallback structure when Gemini response fails
