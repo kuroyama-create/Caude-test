@@ -490,45 +490,12 @@ function generateTimelineSVG(structure, width, height, padding) {
   return svg;
 }
 
-// Convert SVG to PNG using OffscreenCanvas
+// Convert SVG to data URL (Service Worker compatible)
 async function svgToPng(svgString) {
-  return new Promise((resolve, reject) => {
-    const blob = new Blob([svgString], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-
-    // Create an image to load the SVG
-    const img = new Image();
-    img.onload = () => {
-      // Create OffscreenCanvas
-      const canvas = new OffscreenCanvas(800, 600);
-      const ctx = canvas.getContext('2d');
-
-      // Fill white background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, 800, 600);
-
-      // Draw SVG
-      ctx.drawImage(img, 0, 0);
-
-      // Convert to blob then to data URL
-      canvas.convertToBlob({ type: 'image/png' }).then(pngBlob => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          URL.revokeObjectURL(url);
-          resolve(reader.result);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(pngBlob);
-      }).catch(reject);
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('SVG画像の読み込みに失敗しました'));
-    };
-
-    img.src = url;
-  });
+  // Service Worker doesn't support URL.createObjectURL or Image
+  // Return SVG as base64 data URL instead
+  const base64 = btoa(unescape(encodeURIComponent(svgString)));
+  return `data:image/svg+xml;base64,${base64}`;
 }
 
 // Escape XML special characters
