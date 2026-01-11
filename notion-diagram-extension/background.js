@@ -1,5 +1,5 @@
 // Notion Diagram Generator - Background Service Worker
-// Handles Gemini 2.0 Flash (Nano Banana Pro) for AI-powered diagram image generation
+// Handles Gemini 3 Pro Image (Nano Banana Pro) for AI-powered diagram image generation
 
 // Message listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -11,7 +11,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Generate diagram using Gemini 2.0 Flash (Nano Banana Pro)
+// Generate diagram using Gemini 3 Pro Image (Nano Banana Pro)
 async function generateDiagram(text, style, apiKey) {
   try {
     // Create a detailed prompt for diagram generation
@@ -52,12 +52,12 @@ ${truncatedText}
 Style: Professional business diagram, clean design, high contrast, readable text`;
 }
 
-// Generate image using Gemini 2.0 Flash (Nano Banana Pro) with native image generation
+// Generate image using Gemini 3 Pro Image (Nano Banana Pro) with native image generation
 async function generateImageWithImagen3(prompt, apiKey) {
-  // Gemini 2.0 Flash with image generation capability (Nano Banana Pro)
+  // Gemini 3 Pro Image (Nano Banana Pro) - AI画像生成モデル
   const geminiImageModels = [
+    'gemini-3-pro-image-preview',  // Nano Banana Pro
     'gemini-2.0-flash-exp',
-    'gemini-2.0-flash-preview-image-generation',
     'gemini-2.0-flash'
   ];
 
