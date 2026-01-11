@@ -68,17 +68,12 @@ apiKeyInput.addEventListener('blur', async () => {
   apiKeyInput.type = 'password';
 });
 
-// Get selected text from Notion page
+// Get selected text from any page
 getSelectionBtn.addEventListener('click', getSelectedTextFromPage);
 
 async function getSelectedTextFromPage() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-    if (!tab.url.includes('notion.so')) {
-      showError('Notionページで使用してください');
-      return;
-    }
 
     // Inject content script if needed and get selection
     const results = await chrome.scripting.executeScript({
@@ -151,6 +146,17 @@ async function generateDiagram() {
       currentImageData = response.imageData;
       previewImage.src = response.imageData;
       previewSection.classList.remove('hidden');
+
+      // 使用モデルを表示
+      const modelInfo = response.isAIGenerated
+        ? `✅ AI画像生成: ${response.modelUsed}`
+        : `⚠️ フォールバック: ${response.modelUsed}`;
+      showStatus(apiStatus, modelInfo, response.isAIGenerated ? 'success' : 'warning');
+
+      // エラーがあれば表示
+      if (response.errors && response.errors.length > 0) {
+        console.log('API Errors:', response.errors);
+      }
     } else {
       showError(response.error || '図解の生成に失敗しました');
     }
