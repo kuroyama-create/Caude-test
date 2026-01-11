@@ -1,4 +1,4 @@
-// Notion Diagram Generator - Background Service Worker
+// Diagram Generator - Background Service Worker
 // Handles Gemini 3 Pro Image (Nano Banana Pro) for AI-powered diagram image generation
 
 // Message listener
@@ -17,10 +17,15 @@ async function generateDiagram(text, style, apiKey) {
     // Create a detailed prompt for diagram generation
     const imagePrompt = createImagePrompt(text, style);
 
-    // Generate image using Imagen 3
-    const imageData = await generateImageWithImagen3(imagePrompt, apiKey);
+    // Generate image using Gemini 3 Pro Image
+    const result = await generateImageWithGemini(imagePrompt, apiKey);
 
-    return { success: true, imageData };
+    return {
+      success: true,
+      imageData: result.imageData,
+      modelUsed: result.modelUsed,  // どのモデルが使われたか
+      isAIGenerated: result.isAIGenerated  // AI画像生成かSVGフォールバックか
+    };
   } catch (error) {
     console.error('Diagram generation error:', error);
     return { success: false, error: error.message };
@@ -53,16 +58,18 @@ Style: Professional business diagram, clean design, high contrast, readable text
 }
 
 // Generate image using Gemini 3 Pro Image (Nano Banana Pro) with native image generation
-async function generateImageWithImagen3(prompt, apiKey) {
+async function generateImageWithGemini(prompt, apiKey) {
   // Gemini 3 Pro Image (Nano Banana Pro) - AI画像生成モデル
   const geminiImageModels = [
-    'gemini-3-pro-image-preview',  // Nano Banana Pro
-    'gemini-2.0-flash-exp',
-    'gemini-2.0-flash'
+    'gemini-3-pro-image-preview'  // Nano Banana Pro のみ使用
   ];
+
+  const errors = [];
 
   for (const model of geminiImageModels) {
     try {
+      console.log(`Trying model: ${model}`);
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
@@ -77,35 +84,57 @@ async function generateImageWithImagen3(prompt, apiKey) {
               }]
             }],
             generationConfig: {
-              responseModalities: ['image', 'text'],
-              responseMimeType: 'image/png'
+              responseModalities: ['image', 'text']
             }
           })
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
+      console.log(`Model ${model} response status: ${response.status}`);
 
-        // Check for inline image data in response
-        const parts = data.candidates?.[0]?.content?.parts || [];
-        for (const part of parts) {
-          if (part.inlineData?.data) {
-            const mimeType = part.inlineData.mimeType || 'image/png';
-            return `data:${mimeType};base64,${part.inlineData.data}`;
-          }
+      if (!response.ok) {
+        const errorMsg = data.error?.message || JSON.stringify(data);
+        errors.push(`${model}: ${response.status} - ${errorMsg}`);
+        console.error(`Model ${model} error:`, errorMsg);
+        continue;
+      }
+
+      // Check for inline image data in response
+      const parts = data.candidates?.[0]?.content?.parts || [];
+      console.log(`Model ${model} returned ${parts.length} parts`);
+
+      for (const part of parts) {
+        if (part.inlineData?.data) {
+          const mimeType = part.inlineData.mimeType || 'image/png';
+          console.log(`SUCCESS: Model ${model} returned image (${mimeType})`);
+          return {
+            imageData: `data:${mimeType};base64,${part.inlineData.data}`,
+            modelUsed: model,
+            isAIGenerated: true
+          };
         }
       }
 
-      console.log(`Model ${model} did not return image, trying next...`);
+      errors.push(`${model}: No image in response (${parts.length} parts)`);
+      console.log(`Model ${model} did not return image data`);
     } catch (e) {
-      console.log(`Model ${model} failed: ${e.message}, trying next...`);
+      errors.push(`${model}: Exception - ${e.message}`);
+      console.error(`Model ${model} exception:`, e);
     }
   }
 
   // Fallback: Generate SVG diagram using text analysis
-  console.log('Image generation not available, falling back to SVG diagram');
-  return await generateWithGeminiFlash(prompt, apiKey);
+  console.log('AI image generation failed, falling back to SVG diagram');
+  console.log('Errors:', errors.join('; '));
+
+  const svgData = await generateWithGeminiFlash(prompt, apiKey);
+  return {
+    imageData: svgData,
+    modelUsed: 'SVG Fallback (gemini-2.0-flash)',
+    isAIGenerated: false,
+    errors: errors
+  };
 }
 
 // Fallback: Generate with Gemini 2.0 Flash (creates SVG diagram)

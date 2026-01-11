@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Notion Diagram Generator",
-  "version": "1.0.0",
-  "description": "選択したテキストから図解画像を生成し、Notionに追加するChrome拡張機能",
+  "name": "Diagram Generator",
+  "version": "1.1.0",
+  "description": "選択したテキストから図解画像を生成するChrome拡張機能（全サイト対応）",
   "permissions": [
     "activeTab",
     "storage",
@@ -10,8 +10,7 @@
     "clipboardWrite"
   ],
   "host_permissions": [
-    "https://www.notion.so/*",
-    "https://notion.so/*",
+    "<all_urls>",
     "https://generativelanguage.googleapis.com/*"
   ],
   "action": {
@@ -32,7 +31,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.notion.so/*", "https://notion.so/*"],
+      "matches": ["<all_urls>"],
       "js": ["content.js"],
       "css": ["styles/content.css"]
     }
